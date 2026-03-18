@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione Clienti</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .badge {
+      display: inline-block;
+      background: #2d2006;
+      color: #f59e0b;
+      border: 1px solid #f59e0b;
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.85em;
+      margin-bottom: 10px;
+    }
+    h1 { font-size: 2em; font-weight: bold; text-align: center; margin-bottom: 24px; }
+    .card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      width: 100%;
+      max-width: 500px;
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: bold;
+      font-size: 1.1em;
+      margin-bottom: 16px;
+      color: #f59e0b;
+    }
+    input[type="text"], input[type="number"], input[type="password"] {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      color: #fff;
+      font-size: 1em;
+      margin-bottom: 10px;
+      outline: none;
+    }
+    input::placeholder { color: #64748b; }
+    input:focus { border-color: #f59e0b; }
+    .row { display: flex; gap: 10px; }
+    .row input { margin-bottom: 0; }
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      font-weight: bold;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.85; }
+    .btn-yellow { background: #f59e0b; color: #000; }
+    .btn-full { width: 100%; margin-top: 6px; }
+    .btn-green { background: #22c55e; color: #000; }
+    .btn-red { background: #ef4444; color: #fff; font-size: 0.85em; padding: 6px 12px; }
+    .clienti-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .count { color: #94a3b8; font-size: 0.9em; }
+    .cliente-item {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      border: 1px solid #1e293b;
+      transition: border-color 0.2s;
+    }
+    .cliente-item:hover { border-color: #f59e0b; }
+    .cliente-nome { font-weight: bold; }
+    .cliente-info { color: #94a3b8; font-size: 0.85em; margin-top: 4px; }
+    .cliente-credito { color: #f59e0b; font-weight: bold; }
+    .empty { color: #64748b; text-align: center; padding: 20px 0; }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay.active { display: flex; }
+    .modale {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modale h3 { font-size: 1.3em; margin-bottom: 4px; }
+    .modale .codice { color: #94a3b8; font-size: 0.9em; margin-bottom: 16px; }
+    .credito-box {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .credito-box .label { color: #94a3b8; font-size: 0.85em; }
+    .credito-box .valore { font-size: 2em; font-weight: bold; color: #f59e0b; }
+    .modale-azioni { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .storico-title { font-weight: bold; margin-bottom: 10px; color: #94a3b8; font-size: 0.9em; }
+    .storico-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #334155;
+      font-size: 0.9em;
+    }
+    .storico-item:last-child { border-bottom: none; }
+    .storico-data { color: #64748b; }
+    .storico-importo.positivo { color: #22c55e; }
+    .storico-importo.negativo { color: #ef4444; }
+    .cerca-risultato {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 10px;
+      display: none;
+    }
+    .msg { padding: 10px; border-radius: 8px; margin-top: 8px; font-size: 0.9em; text-align: center; }
+    .msg.ok { background: #14532d; color: #86efac; }
+    .msg.err { background: #450a0a; color: #fca5a5; }
+    .top { text-align: center; margin-bottom: 16px; width: 100%; }
+
+    /* LOGIN */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100%;
+    }
+    #login-box {
+      background: #1e293b;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+    }
+    #login-box h2 { margin-bottom: 8px; }
+    #login-box p { color: #94a3b8; font-size: 0.9em; margin-bottom: 20px; }
+    #login-error { color: #fca5a5; font-size: 0.9em; min-height: 20px; margin-bottom: 8px; }
+    #app-screen { display: none; width: 100%; flex-direction: column; align-items: center; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div id="login-box">
+      <div class="badge">🍎 Il tuo business a scuola</div>
+      <h2>🔒 Accesso richiesto</h2>
+      <p>Inserisci la password per continuare</p>
+      <input type="password" id="password-input" placeholder="Password" />
+      <p id="login-error"></p>
+      <button class="btn-yellow btn-full" onclick="checkPassword()">Entra</button>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app-screen">
+    <div class="top">
+      <div class="badge">🍎 Il tuo business a scuola</div>
+      <h1>Gestione Merende</h1>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔍 Cerca cliente per codice</div>
+      <div class="row">
+        <input type="text" id="cerca-input" placeholder="Es. 1234" maxlength="4" />
+        <button class="btn-yellow" onclick="cercaCliente()">Cerca</button>
+      </div>
+      <div id="cerca-risultato" class="cerca-risultato"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👤 Nuovo cliente</div>
+      <input type="text" id="nuovo-nome" placeholder="Es. Marco R." />
+      <input type="text" id="nuovo-codice" placeholder="Codice 4 cifre (opzionale, generato automaticamente)" maxlength="4" />
+      <button class="btn-yellow btn-full" onclick="creaCliente()">Crea cliente</button>
+      <div id="msg-nuovo"></div>
+    </div>
+
+    <div class="card">
+      <div class="clienti-header">
+        <div class="card-title" style="margin-bottom:0">👥 Tutti i clienti</div>
+        <div class="count" id="count-clienti">0 clienti</div>
+      </div>
+      <div id="lista-clienti"><p class="empty">Nessun cliente ancora. Creane uno sopra!</p></div>
+    </div>
+  </div>
+
+  <!-- MODALE -->
+  <div class="overlay" id="overlay" onclick="chiudiModale(event)">
+    <div class="modale">
+      <h3 id="m-nome"></h3>
+      <div class="codice" id="m-codice"></div>
+      <div class="credito-box">
+        <div class="label">Credito disponibile</div>
+        <div class="valore" id="m-credito">€0.00</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <input type="number" id="m-importo" placeholder="Importo €" step="0.01" min="0" />
+      </div>
+      <div class="modale-azioni">
+        <button class="btn-green" onclick="registraMovimento('acquisto')">➕ Aggiungi credito</button>
+        <button class="btn-red" onclick="registraMovimento('spesa')">➖ Registra spesa</button>
+        <button class="btn-red" style="background:#6b7280" onclick="eliminaCliente()">🗑️ Elimina</button>
+      </div>
+      <div class="storico-title">STORICO MOVIMENTI</div>
+      <div id="m-storico"></div>
+      <button class="btn-yellow btn-full" style="margin-top:16px" onclick="chiudiModaleBtn()">Chiudi</button>
+    </div>
+  </div>
+
+  <script>
+    const PASSWORD = "cracker-broski";
+    let clienteAperto = null;
+
+    function checkPassword() {
+      const input = document.getElementById('password-input').value;
+      if (input === PASSWORD) {
+        document.getElementById('login-screen').style.display = 'none';
+        const app = document.getElementById('app-screen');
+        app.style.display = 'flex';
+        aggiornaLista();
+      } else {
+        document.getElementById('login-error').textContent = '❌ Password errata, riprova.';
+        document.getElementById('password-input').value = '';
+      }
+    }
+
+    document.getElementById('password-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') checkPassword();
+    });
+
+    function getClienti() {
+      return JSON.parse(localStorage.getItem('clienti') || '[]');
+    }
+
+    function salvaClienti(clienti) {
+      localStorage.setItem('clienti', JSON.stringify(clienti));
+    }
+
+    function generaCodice() {
+      const clienti = getClienti();
+      let codice;
+      do {
+        codice = String(Math.floor(1000 + Math.random() * 9000));
+      } while (clienti.find(c => c.codice === codice));
+      return codice;
+    }
+
+    function creaCliente() {
+      const nome = document.getElementById('nuovo-nome').value.trim();
+      const codiceInput = document.getElementById('nuovo-codice').value.trim();
+      const msg = document.getElementById('msg-nuovo');
+      if (!nome) { msg.innerHTML = '<div class="msg err">⚠️ Inserisci un nome!</div>'; return; }
+      const clienti = getClienti();
+      const codice = codiceInput || generaCodice();
+      if (clienti.find(c => c.codice === codice)) {
+        msg.innerHTML = '<div class="msg err">❌ Codice già esistente!</div>'; return;
+      }
+      clienti.push({ nome, codice, credito: 0, storico: [] });
+      salvaClienti(clienti);
+      document.getElementById('nuovo-nome').value = '';
+      document.getElementById('nuovo-codice').value = '';
+      msg.innerHTML = '<div class="msg ok">✅ Cliente creato! Codice: <strong>' + codice + '</strong></div>';
+      aggiornaLista();
+      setTimeout(() => msg.innerHTML = '', 3000);
+    }
+
+    function cercaCliente() {
+      const codice = document.getElementById('cerca-input').value.trim();
+      const box = document.getElementById('cerca-risultato');
+      const cliente = getClienti().find(c => c.codice === codice);
+      box.style.display = 'block';
+      if (cliente) {
+        box.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:bold">${cliente.nome}</div>
+              <div style="color:#94a3b8;font-size:0.85em">Codice: ${cliente.codice}</div>
+              <div style="color:#f59e0b;font-weight:bold">Credito: €${cliente.credito.toFixed(2)}</div>
+            </div>
+            <button class="btn-yellow" onclick="apriModale('${cliente.codice}')">Apri</button>
+          </div>`;
+      } else {
+        box.innerHTML = '<div class="msg err">❌ Nessun cliente trovato con codice: ' + codice + '</div>';
+      }
+    }
+
+    function aggiornaLista() {
+      const clienti = getClienti();
+      document.getElementById('count-clienti').textContent = clienti.length + ' clienti';
+      const lista = document.getElementById('lista-clienti');
+      if (clienti.length === 0) {
+        lista.innerHTML = '<p class="empty">Nessun cliente ancora. Creane uno sopra!</p>'; return;
+      }
+      lista.innerHTML = clienti.map(c => `
+        <div class="cliente-item" onclick="apriModale('${c.codice}')">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="cliente-nome">${c.nome}</div>
+              <div class="cliente-info">Codice: ${c.codice}</div>
+            </div>
+            <div class="cliente-credito">€${c.credito.toFixed(2)}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    function apriModale(codice) {
+      const cliente = getClienti().find(c => c.codice === codice);
+      if (!cliente) return;
+      clienteAperto = codice;
+      document.getElementById('m-nome').textContent = cliente.nome;
+      document.getElementById('m-codice').textContent = 'Codice: ' + cliente.codice;
+      document.getElementById('m-credito').textContent = '€' + cliente.credito.toFixed(2);
+      document.getElementById('m-importo').value = '';
+      const storico = cliente.storico.slice().reverse();
+      const storicoEl = document.getElementById('m-storico');
+      storicoEl.innerHTML = storico.length === 0
+        ? '<p class="empty">Nessun movimento ancora.</p>'
+        : storico.map(s => `
+          <div class="storico-item">
+            <div>
+              <div>${s.tipo === 'acquisto' ? '➕ Credito aggiunto' : '➖ Spesa registrata'}</div>
+              <div class="storico-data">${s.data}</div>
+            </div>
+            <div class="storico-importo ${s.tipo === 'acquisto' ? 'positivo' : 'negativo'}">
+              ${s.tipo === 'acquisto' ? '+' : '-'}€${s.importo.toFixed(2)}
+            </div>
+          </div>`).join('');
+      document.getElementById('overlay').classList.add('active');
+    }
+
+    function registraMovimento(tipo) {
+      const importo = parseFloat(document.getElementById('m-importo').value);
+      if (!importo || importo <= 0) { alert('Inserisci un importo valido!'); return; }
+      const clienti = getClienti();
+      const cliente = clienti.find(c => c.codice === clienteAperto);
+      if (!cliente) return;
+      if (tipo === 'spesa' && cliente.credito < importo) { alert('⚠️ Credito insufficiente!'); return; }
+      const ora = new Date();
+      const data = ora.toLocaleDateString('it-IT') + ' ' + ora.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+      cliente.storico.push({ tipo, importo, data });
+      cliente.credito += tipo === 'acquisto' ? importo : -importo;
+      salvaClienti(clienti);
+      aggiornaLista();
+      apriModale(clienteAperto);
+    }
+
+    function eliminaCliente() {
+      if (!confirm('Sei sicuro di voler eliminare questo cliente?')) return;
+      salvaClienti(getClienti().filter(c => c.codice !== clienteAperto));
+      aggiornaLista();
+      chiudiModaleBtn();
+    }
+
+    function chiudiModale(event) {
+      if (event.target === document.getElementById('overlay')) chiudiModaleBtn();
+    }
+
+    function chiudiModaleBtn() {
+      document.getElementById('overlay').classList.remove('active');
+      clienteAperto = null;
+    }
+
+    document.getElementById('cerca-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') cercaCliente();
+    });
+  </script>
+</body>
+</html>
